@@ -1,0 +1,9 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/u858890408/public_html/api
+    - /bin/cp -Rf backend/. $DEPLOYPATH
+    - cd $DEPLOYPATH && php artisan config:cache
+    - cd $DEPLOYPATH && php artisan route:cache
+    - cd $DEPLOYPATH && php artisan migrate --force
+    - chmod -R 775 $DEPLOYPATH/storage $DEPLOYPATH/bootstrap/cache

@@ -1,0 +1,8 @@
+# Build artifacts
+backend.zip
+frontend/dist
+frontend/node_modules
+
+# OS
+.DS_Store
+Thumbs.db
