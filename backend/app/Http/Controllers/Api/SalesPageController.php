@@ -3,153 +3,97 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\SalesPage;
 use Illuminate\Http\Request;
 
 class SalesPageController extends Controller
 {
-    // Dummy in-memory store (simulates DB)
-    private static array $dummyPages = [];
-
-    private function getDummyPages(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'product_name' => 'ProTask Manager',
-                'status' => 'completed',
-                'created_at' => '2026-04-25T10:00:00Z',
-                'input' => [
-                    'product_name' => 'ProTask Manager',
-                    'description' => 'A powerful project management tool for remote teams',
-                    'features' => 'Real-time collaboration, Kanban boards, Time tracking, Analytics',
-                    'target_audience' => 'Remote teams and project managers',
-                    'price' => '$29/month',
-                    'usp' => 'The only tool that combines task management with built-in time tracking',
-                ],
-                'content' => $this->getDummyGeneratedContent('ProTask Manager', '$29/month'),
-            ],
-            [
-                'id' => 2,
-                'product_name' => 'FitCoach AI',
-                'status' => 'completed',
-                'created_at' => '2026-04-26T14:30:00Z',
-                'input' => [
-                    'product_name' => 'FitCoach AI',
-                    'description' => 'Personalized AI fitness coaching app',
-                    'features' => 'Custom workout plans, Nutrition tracking, Progress analytics, Live coaching',
-                    'target_audience' => 'Fitness enthusiasts and beginners',
-                    'price' => '$19/month',
-                    'usp' => 'AI-powered coaching that adapts to your fitness level every week',
-                ],
-                'content' => $this->getDummyGeneratedContent('FitCoach AI', '$19/month'),
-            ],
-        ];
-    }
-
-    private function getDummyGeneratedContent(string $productName, string $price): array
-    {
-        return [
-            'headline' => "Transform Your Life with {$productName} — The Future is Here",
-            'sub_headline' => "Join thousands of satisfied customers who have already experienced the difference.",
-            'description' => "{$productName} is a revolutionary solution designed to help you achieve more in less time. Built with cutting-edge technology and backed by real results, it's everything you need — and nothing you don't.",
-            'benefits' => [
-                'Save 10+ hours every week with automated workflows',
-                'Increase productivity by up to 300% in the first month',
-                'Get started in minutes with zero technical knowledge required',
-                'Access premium support 24/7 whenever you need help',
-            ],
-            'features' => [
-                ['title' => 'Smart Automation', 'description' => 'Let AI handle the repetitive tasks so you can focus on what matters.'],
-                ['title' => 'Real-time Analytics', 'description' => 'Get instant insights with beautiful dashboards and reports.'],
-                ['title' => 'Team Collaboration', 'description' => 'Work seamlessly with your team no matter where they are.'],
-                ['title' => 'Secure & Reliable', 'description' => '99.9% uptime guarantee with enterprise-grade security.'],
-            ],
-            'social_proof' => [
-                ['name' => 'Sarah Johnson', 'role' => 'CEO at TechStartup', 'quote' => "This completely transformed how our team works. We can't imagine going back."],
-                ['name' => 'Michael Chen', 'role' => 'Freelance Designer', 'quote' => 'I doubled my client capacity within the first month. Absolutely incredible.'],
-                ['name' => 'Emma Williams', 'role' => 'Marketing Director', 'quote' => 'The ROI was immediate. Best investment we made this year.'],
-            ],
-            'pricing' => [
-                'price' => $price,
-                'billing' => 'per month',
-                'guarantee' => '30-day money-back guarantee',
-                'includes' => ['Full access to all features', 'Priority customer support', 'Free updates forever', 'Onboarding assistance'],
-            ],
-            'cta' => [
-                'primary' => "Start Your Free Trial Today",
-                'secondary' => 'No credit card required · Cancel anytime',
-            ],
-        ];
-    }
-
     public function index(Request $request)
     {
-        $pages = $this->getDummyPages();
+        $userId = $request->user()?->id ?? 1;
 
-        if ($request->has('search') && $request->search) {
-            $search = strtolower($request->search);
-            $pages = array_filter($pages, function ($page) use ($search) {
-                return str_contains(strtolower($page['product_name']), $search);
-            });
+        $query = SalesPage::where('user_id', $userId)->latest();
+
+        if ($request->filled('search')) {
+            $query->where('product_name', 'like', '%' . $request->search . '%');
         }
 
+        $pages = $query->get()->map(fn($p) => $this->formatPage($p));
+
         return response()->json([
-            'data' => array_values($pages),
-            'total' => count($pages),
+            'data'  => $pages,
+            'total' => $pages->count(),
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'product_name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'features' => 'required|string',
+            'product_name'    => 'required|string|max:255',
+            'description'     => 'required|string',
+            'features'        => 'required|string',
             'target_audience' => 'required|string',
-            'price' => 'required|string',
-            'usp' => 'nullable|string',
+            'price'           => 'required|string',
+            'usp'             => 'nullable|string',
+            'tone'            => 'nullable|string',
         ]);
 
-        // Simulate AI generation delay
-        sleep(1);
+        $userId = $request->user()?->id ?? 1;
+        $input  = $request->only(['product_name', 'description', 'features', 'target_audience', 'price', 'usp', 'tone']);
 
-        $content = $this->getDummyGeneratedContent($request->product_name, $request->price);
+        $content = $this->buildGeneratedContent($request->product_name, $request->price, $request->target_audience, $request->description);
 
-        // Customize dummy content with real input
-        $content['headline'] = "Introducing {$request->product_name}: The Ultimate Solution for {$request->target_audience}";
-        $content['sub_headline'] = "Stop struggling with the old way. {$request->product_name} makes it effortless.";
-        $content['description'] = $request->description . ' Trusted by thousands of professionals worldwide.';
-
-        $newPage = [
-            'id' => rand(100, 999),
+        $page = SalesPage::create([
+            'user_id'      => $userId,
             'product_name' => $request->product_name,
-            'status' => 'completed',
-            'created_at' => now()->toISOString(),
-            'input' => $request->only(['product_name', 'description', 'features', 'target_audience', 'price', 'usp']),
-            'content' => $content,
-        ];
+            'input_data'   => $input,
+            'content'      => $content,
+            'status'       => 'completed',
+        ]);
 
         return response()->json([
             'message' => 'Sales page generated successfully',
-            'data' => $newPage,
+            'data'    => $this->formatPage($page),
         ], 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $pages = $this->getDummyPages();
-        $page = collect($pages)->firstWhere('id', (int) $id);
+        $userId = $request->user()?->id ?? 1;
+        $page   = SalesPage::where('id', $id)->where('user_id', $userId)->firstOrFail();
 
-        if (!$page) {
-            return response()->json(['message' => 'Page not found'], 404);
-        }
-
-        return response()->json(['data' => $page]);
+        return response()->json(['data' => $this->formatPage($page)]);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        $userId = $request->user()?->id ?? 1;
+        $page   = SalesPage::where('id', $id)->where('user_id', $userId)->firstOrFail();
+        $page->delete();
+
         return response()->json(['message' => 'Sales page deleted successfully']);
+    }
+
+    public function regenerate(Request $request, string $id)
+    {
+        $userId = $request->user()?->id ?? 1;
+        $page   = SalesPage::where('id', $id)->where('user_id', $userId)->firstOrFail();
+
+        $input   = $page->input_data;
+        $content = $this->buildGeneratedContent(
+            $page->product_name,
+            $input['price'] ?? '',
+            $input['target_audience'] ?? '',
+            $input['description'] ?? ''
+        );
+        $content['headline'] = "🔥 New: {$page->product_name} Just Got Even Better";
+
+        $page->update(['content' => $content]);
+
+        return response()->json([
+            'message' => 'Sales page regenerated successfully',
+            'data'    => $this->formatPage($page->fresh()),
+        ]);
     }
 
     public function regenerateSection(Request $request, string $id)
@@ -158,17 +102,71 @@ class SalesPageController extends Controller
             'section' => 'required|in:headline,sub_headline,description,benefits,features,cta',
         ]);
 
-        $pages = $this->getDummyPages();
-        $page = collect($pages)->firstWhere('id', (int) $id);
-        $productName = $page['product_name'] ?? 'Your Product';
+        $userId = $request->user()?->id ?? 1;
+        $page   = SalesPage::where('id', $id)->where('user_id', $userId)->firstOrFail();
 
-        $content = $this->getDummySectionContent($request->section, $productName);
+        $sectionContent = $this->getDummySectionContent($request->section, $page->product_name);
+
+        // Update hanya section yang diminta di dalam JSON content
+        $content = $page->content;
+        $content[$request->section] = $sectionContent;
+        $page->update(['content' => $content]);
 
         return response()->json([
             'message' => 'Section regenerated successfully',
             'section' => $request->section,
-            'content' => $content,
+            'content' => $sectionContent,
         ]);
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private function formatPage(SalesPage $page): array
+    {
+        return [
+            'id'           => $page->id,
+            'product_name' => $page->product_name,
+            'status'       => $page->status,
+            'created_at'   => $page->created_at->toISOString(),
+            'input'        => $page->input_data,
+            'content'      => $page->content,
+        ];
+    }
+
+    private function buildGeneratedContent(string $productName, string $price, string $audience, string $description): array
+    {
+        return [
+            'headline'    => "Introducing {$productName}: The Ultimate Solution for {$audience}",
+            'sub_headline' => "Stop struggling with the old way. {$productName} makes it effortless.",
+            'description' => $description . ' Trusted by thousands of professionals worldwide.',
+            'benefits'    => [
+                'Save 10+ hours every week with automated workflows',
+                'Increase productivity by up to 300% in the first month',
+                'Get started in minutes with zero technical knowledge required',
+                'Access premium support 24/7 whenever you need help',
+            ],
+            'features'    => [
+                ['title' => 'Smart Automation',    'description' => 'Let AI handle the repetitive tasks so you can focus on what matters.'],
+                ['title' => 'Real-time Analytics', 'description' => 'Get instant insights with beautiful dashboards and reports.'],
+                ['title' => 'Team Collaboration',  'description' => 'Work seamlessly with your team no matter where they are.'],
+                ['title' => 'Secure & Reliable',   'description' => '99.9% uptime guarantee with enterprise-grade security.'],
+            ],
+            'social_proof' => [
+                ['name' => 'Sarah Johnson', 'role' => 'CEO at TechStartup',     'quote' => "This completely transformed how our team works. We can't imagine going back."],
+                ['name' => 'Michael Chen',  'role' => 'Freelance Designer',     'quote' => 'I doubled my client capacity within the first month. Absolutely incredible.'],
+                ['name' => 'Emma Williams', 'role' => 'Marketing Director',     'quote' => 'The ROI was immediate. Best investment we made this year.'],
+            ],
+            'pricing'     => [
+                'price'    => $price,
+                'billing'  => 'per month',
+                'guarantee' => '30-day money-back guarantee',
+                'includes' => ['Full access to all features', 'Priority customer support', 'Free updates forever', 'Onboarding assistance'],
+            ],
+            'cta'         => [
+                'primary'   => 'Start Your Free Trial Today',
+                'secondary' => 'No credit card required · Cancel anytime',
+            ],
+        ];
     }
 
     private function getDummySectionContent(string $section, string $productName): mixed
@@ -198,47 +196,26 @@ class SalesPageController extends Controller
             ],
             'features' => [
                 [
-                    ['title' => 'AI-Powered Insights', 'description' => 'Machine learning surfaces what matters most, so you can act fast.'],
-                    ['title' => 'One-Click Integrations', 'description' => 'Connect 200+ tools in seconds with zero coding required.'],
-                    ['title' => 'Custom Workflows', 'description' => 'Build processes that fit your team, not the other way around.'],
-                    ['title' => 'Enterprise Security', 'description' => 'SOC 2 Type II certified with end-to-end encryption.'],
+                    ['title' => 'AI-Powered Insights',  'description' => 'Machine learning surfaces what matters most, so you can act fast.'],
+                    ['title' => 'One-Click Integrations','description' => 'Connect 200+ tools in seconds with zero coding required.'],
+                    ['title' => 'Custom Workflows',      'description' => 'Build processes that fit your team, not the other way around.'],
+                    ['title' => 'Enterprise Security',   'description' => 'SOC 2 Type II certified with end-to-end encryption.'],
                 ],
                 [
-                    ['title' => 'Smart Dashboards', 'description' => 'Visualize every metric that matters in one clean view.'],
+                    ['title' => 'Smart Dashboards',  'description' => 'Visualize every metric that matters in one clean view.'],
                     ['title' => 'Automated Reports', 'description' => 'Get weekly summaries delivered straight to your inbox.'],
                     ['title' => 'Role-Based Access', 'description' => 'Control exactly who sees what with granular permissions.'],
-                    ['title' => 'API Access', 'description' => 'Build custom integrations with our developer-friendly REST API.'],
+                    ['title' => 'API Access',         'description' => 'Build custom integrations with our developer-friendly REST API.'],
                 ],
             ],
             'cta' => [
-                ['primary' => 'Claim Your Free 14-Day Trial', 'secondary' => 'No setup fees · No credit card required · Cancel anytime'],
-                ['primary' => 'Get Started for Free Today', 'secondary' => 'Join 50,000+ teams already using ' . $productName],
-                ['primary' => 'Start Your Free Trial Now', 'secondary' => '30-day money-back guarantee · No questions asked'],
+                ['primary' => 'Claim Your Free 14-Day Trial',  'secondary' => 'No setup fees · No credit card required · Cancel anytime'],
+                ['primary' => 'Get Started for Free Today',    'secondary' => "Join 50,000+ teams already using {$productName}"],
+                ['primary' => 'Start Your Free Trial Now',     'secondary' => '30-day money-back guarantee · No questions asked'],
             ],
         ];
 
         $options = $variants[$section];
         return $options[array_rand($options)];
-    }
-
-    public function regenerate(Request $request, string $id)
-    {
-        $pages = $this->getDummyPages();
-        $page = collect($pages)->firstWhere('id', (int) $id);
-
-        if (!$page) {
-            return response()->json(['message' => 'Page not found'], 404);
-        }
-
-        $content = $this->getDummyGeneratedContent($page['product_name'], $page['input']['price']);
-        $content['headline'] = "🔥 New: {$page['product_name']} Just Got Even Better";
-
-        $page['content'] = $content;
-        $page['created_at'] = now()->toISOString();
-
-        return response()->json([
-            'message' => 'Sales page regenerated successfully',
-            'data' => $page,
-        ]);
     }
 }
