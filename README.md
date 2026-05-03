@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![AI Sales Page Generator](docs/screenshots/hero.png)
 
 **Transform your product information into a complete, persuasive sales page — powered by AI.**
 
@@ -51,7 +50,7 @@ Aplikasi ini dibangun dengan arsitektur **decoupled** — frontend React di-depl
 - Protected routes di frontend menggunakan React Router
 - Data setiap user terisolasi — tidak bisa mengakses data user lain
 
-![Login Page](docs/screenshots/login.png)
+<img width="1439" height="862" alt="image" src="https://github.com/user-attachments/assets/a224c841-94cb-4b21-9f48-3efb98fcfd40" />
 
 #### 📝 Product Input Form
 Form terstruktur untuk mengisi informasi produk:
@@ -63,7 +62,7 @@ Form terstruktur untuk mengisi informasi produk:
 - Unique Selling Point (opsional)
 - Pilihan tone: Professional, Casual, Persuasive, Energetic, Luxury
 
-![Generator Form](docs/screenshots/generator.png)
+<img width="792" height="670" alt="image" src="https://github.com/user-attachments/assets/a5ab3e0c-292a-43d8-be42-aa2e5c613157" />
 
 #### 🤖 AI Sales Page Generation
 - Input dikirim ke backend Laravel API
@@ -72,6 +71,8 @@ Form terstruktur untuk mengisi informasi produk:
 - Loading state saat proses generate
 - Error handling jika terjadi kegagalan
 
+<img width="305" height="674" alt="image" src="https://github.com/user-attachments/assets/5e39a9d3-dd90-430a-8e21-a66907d50dd3" />
+
 #### 📚 Generation History
 - Semua sales page tersimpan ke database MySQL
 - Halaman history menampilkan semua hasil generate user
@@ -79,7 +80,7 @@ Form terstruktur untuk mengisi informasi produk:
 - Delete sales page yang tidak dibutuhkan
 - Data persistent — tersimpan meski browser ditutup
 
-![History Page](docs/screenshots/history.png)
+<img width="1261" height="681" alt="image" src="https://github.com/user-attachments/assets/03dd1c7e-9489-41c2-8ea8-6d47702540c6" />
 
 #### 👁️ Live Preview
 - Sales page di-render sebagai halaman landing page nyata
