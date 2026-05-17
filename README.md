@@ -161,37 +161,6 @@ Aplikasi ini dibangun dengan arsitektur **decoupled** — frontend React di-depl
 
 ---
 
-## Screenshots
-
-### Login & Register
-![Login](docs/screenshots/login.png)
-
-### Generator Form
-![Generator](docs/screenshots/generator.png)
-
-### Template Selection
-![Templates](docs/screenshots/templates.png)
-
-### Live Preview — Modern Template
-![Preview Modern](docs/screenshots/preview-modern.png)
-
-### Live Preview — Bold Template
-![Preview Bold](docs/screenshots/preview-bold.png)
-
-### Live Preview — Minimal Template
-![Preview Minimal](docs/screenshots/preview-minimal.png)
-
-### Section Regeneration
-![Section Regen](docs/screenshots/section-regen.png)
-
-### History Page
-![History](docs/screenshots/history.png)
-
-### Export HTML Result
-![Export](docs/screenshots/export.png)
-
----
-
 ## Flow Aplikasi
 
 ### 1. Authentication Flow
