@@ -44,75 +44,47 @@ Aplikasi ini dibangun dengan arsitektur **decoupled** — frontend React di-depl
 
 ### Core Features
 
-#### 🔐 User Authentication
-- Register, login, dan logout menggunakan Laravel Sanctum
-- Token-based authentication — token disimpan di `localStorage` dan dikirim via `Authorization: Bearer` header
-- Protected routes di frontend menggunakan React Router
-- Data setiap user terisolasi — tidak bisa mengakses data user lain
-
-<img width="1439" height="862" alt="image" src="https://github.com/user-attachments/assets/a224c841-94cb-4b21-9f48-3efb98fcfd40" />
-
-#### 📝 Product Input Form
-Form terstruktur untuk mengisi informasi produk:
-- Nama produk / layanan
-- Deskripsi produk
-- Fitur-fitur utama (comma-separated)
-- Target audience
-- Harga
-- Unique Selling Point (opsional)
-- Pilihan tone: Professional, Casual, Persuasive, Energetic, Luxury
-
-<img width="792" height="670" alt="image" src="https://github.com/user-attachments/assets/a5ab3e0c-292a-43d8-be42-aa2e5c613157" />
-
-#### 🤖 AI Sales Page Generation
-- Input dikirim ke backend Laravel API
-- Backend generate sales page terstruktur dalam format JSON
-- Output mencakup: headline, sub-headline, deskripsi, benefits, features, social proof, pricing, dan CTA
-- Loading state saat proses generate
-- Error handling jika terjadi kegagalan
-
-<img width="305" height="674" alt="image" src="https://github.com/user-attachments/assets/5e39a9d3-dd90-430a-8e21-a66907d50dd3" />
-
-#### 📚 Generation History
-- Semua sales page tersimpan ke database MySQL
-- Halaman history menampilkan semua hasil generate user
-- Fitur search berdasarkan nama produk
-- Delete sales page yang tidak dibutuhkan
-- Data persistent — tersimpan meski browser ditutup
-
-<img width="1261" height="681" alt="image" src="https://github.com/user-attachments/assets/03dd1c7e-9489-41c2-8ea8-6d47702540c6" />
-
-#### 👁️ Live Preview
-- Sales page di-render sebagai halaman landing page nyata
-- Tampilan presentable, bukan raw text
-- Bisa langsung preview hasil sebelum export
-
----
+- 🔐 **User Authentication** — Register, login, logout via Laravel Sanctum; token Bearer di localStorage; protected routes React Router; data user terisolasi
+- 📝 **Product Input Form** — Input nama produk, deskripsi, fitur, target audience, harga, USP, dan pilihan tone (Professional, Casual, Persuasive, Energetic, Luxury)
+- 🤖 **AI Sales Page Generation** — Generate sales page terstruktur JSON: headline, sub-headline, benefits, features, social proof, pricing, CTA; dengan loading state dan error handling
+- 📚 **Generation History** — Semua hasil tersimpan di MySQL, bisa search by nama produk, delete, dan persistent meski browser ditutup
+- 👁️ **Live Preview** — Sales page di-render sebagai landing page nyata, bisa preview sebelum export
 
 ### Bonus Features
 
-#### 🎨 Multiple Design Templates
-3 template visual yang berbeda, bisa diganti kapan saja tanpa regenerate:
+- 🎨 **Multiple Design Templates** — 3 template: Modern (indigo/purple gradient), Bold (dark zinc-900 + orange), Minimal (pure white); bisa ganti kapan saja tanpa regenerate
+- ♻️ **Section-by-Section Regeneration** — Regenerate per bagian (Headline, Sub-headline, Description, Benefits, Features, CTA) via quick bar atau hover langsung di preview; loading per-section
+- 📤 **Export Options** — Export `.txt` (semua copy rapi) atau `.html` (standalone file + inline CSS, siap pakai tanpa dependency)
 
-| Template | Deskripsi |
-|---|---|
-| **Modern** | Gradient indigo/purple, card-based, clean & professional |
-| **Bold** | Dark background zinc-900, aksen orange, typography uppercase, high-impact |
-| **Minimal** | Pure white, font-light, border grid, elegant & timeless |
+---
 
-![Template Comparison](docs/screenshots/templates.png)
+### Coming Soon
 
-#### ♻️ Section-by-Section Regeneration
-- Regenerate hanya bagian tertentu tanpa mengubah keseluruhan sales page
-- Section yang bisa di-regenerate: Headline, Sub-headline, Description, Benefits, Features, CTA
-- Dua cara: klik tombol di quick bar atas, atau hover langsung di section preview
-- Loading per-section — bagian lain tetap normal
+#### 🤖 AI & Generation
+- 🧠 **Real AI Integration** — Integrasi OpenAI / Claude API untuk generate konten unik per produk, bukan template statis *(Backend: `openai-php/client` atau Anthropic PHP SDK via Guzzle HTTP; Frontend: streaming response dengan `fetch` + `ReadableStream`)*
+- ⚡ **Async Queue Generation** — AI generation via background job, frontend polling status *(Backend: Laravel Queue + Redis, `php artisan make:job GenerateSalesPageJob`, Laravel Horizon untuk monitoring; Frontend: polling `setInterval` atau realtime via Laravel Echo + Pusher)*
+- 🌍 **Multi-language Output** — Pilihan bahasa hasil generate: Indonesia, English, dan bahasa lainnya *(Backend: parameter `language` dikirim ke AI prompt — tidak perlu library tambahan; Frontend: dropdown bahasa + `i18next` / `react-i18next` untuk terjemahan UI)*
 
-![Section Regeneration](docs/screenshots/section-regen.png)
+#### 🎨 Customization
+- 🖼️ **Image Upload** — Upload logo / foto produk via Cloudinary, tampil langsung di preview sales page *(Backend: `cloudinary/cloudinary_php` SDK, simpan URL di kolom `image_url`; Frontend: `react-dropzone` + Cloudinary Upload Widget)*
+- 🎨 **Custom Brand Color** — User bisa set palet warna sendiri, tidak terbatas 3 template bawaan *(Backend: simpan `brand_colors` JSON di tabel `sales_pages`; Frontend: `react-colorful` color picker, apply via CSS variables / inline style)*
+- 📱 **Mobile Preview** — Toggle tampilan desktop vs mobile view sebelum export *(Frontend only: toggle state + `max-width` constraint pada wrapper preview — tidak perlu library tambahan)*
 
-#### 📤 Export Options
-- **Export .txt** — semua copy dalam format teks rapi
-- **Export .html** — standalone HTML file dengan inline CSS, siap langsung dipakai sebagai landing page tanpa dependency apapun
+#### 📊 Analytics & Notifikasi
+- 🔗 **Public Share Link** — Generate URL publik yang bisa dibagikan ke klien tanpa perlu login *(Backend: kolom `public_token` UUID di `sales_pages`, route publik `GET /s/{token}`; Frontend: tombol copy-to-clipboard via browser Clipboard API)*
+- 📊 **View Analytics** — Tracking berapa kali public link dibuka, lengkap dengan grafik *(Backend: tabel `page_views` + query aggregasi per hari; Frontend: `Recharts` atau `Chart.js` untuk visualisasi grafik)*
+- 📧 **Send to Email** — Tombol kirim hasil sales page langsung ke email tujuan setelah generate *(Backend: Laravel Mail `php artisan make:mail SalesPageMail`, SMTP via Mailgun / SendGrid / Mailtrap; Frontend: modal input email + trigger API)*
+- 🔔 **Email & Web Push Notification** — Notifikasi otomatis ketika sales page selesai di-generate *(Backend: Laravel Notification + `laravel-notification-channels/webpush`; Frontend: Service Worker untuk subscribe push notification)*
+
+#### 👥 User & Admin
+- 👤 **Profile Page** — Halaman pengaturan akun: ganti nama, email, dan password *(Backend: `PUT /api/user/profile` di AuthController, validasi email unique ignore self; Frontend: halaman `/profile` baru dengan form)*
+- 🛡️ **Admin Role** — Dashboard admin untuk melihat semua user, usage stats, dan manajemen konten *(Backend: kolom `role` enum di tabel `users`, Laravel Gate / middleware `EnsureIsAdmin`; Frontend: route `/admin` dengan layout terpisah)*
+- 💳 **Subscription & Usage Limit** — Free tier: 5 generate/bulan — Pro tier: unlimited, diproses via Stripe *(Backend: Laravel Cashier + Stripe, kolom `plan` dan `generate_count` di `users`, middleware cek limit; Frontend: `@stripe/react-stripe-js` untuk payment form)*
+
+#### ⚙️ Developer & Quality
+- 📄 **Pagination & Filter** — Pagination di history, filter tanggal, sort newest/oldest *(Backend: `SalesPage::paginate(10)`, query params `?page=&from=&to=`; Frontend: pagination component sederhana tanpa library tambahan)*
+- 🗑️ **Soft Delete** — Sales page dihapus masuk trash, bisa di-restore *(Backend: `SoftDeletes` trait + kolom `deleted_at` via migration — bawaan Laravel, tidak perlu library tambahan)*
+- 🧪 **Automated Testing** — Feature tests PHPUnit untuk semua API endpoint *(Backend: PHPUnit bawaan Laravel, `RefreshDatabase` + `actingAs()` untuk simulasi auth — tidak perlu setup tambahan)*
 
 ---
 
